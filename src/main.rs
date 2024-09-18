@@ -1,230 +1,319 @@
 use std::fs::File;
 use std::io::{self, Read, Seek, SeekFrom, Write};
 
+
 const FHDR: usize = 4;
 const FVER: usize = 5;
-const CLEVEL: usize = 2;
-const STYPE: usize = 4;
-const OSTAID: usize = 10;
-const FDT: usize = 14;
-const FTITLE: usize = 80;
-const FSCLAS: usize = 1;
-const FSCLSY: usize = 2;
-const FSCODE: usize = 11;
-const FSCTLH: usize = 2;
-const FSREL: usize = 20;
-const FSDCTP: usize = 2;
-const FSDCDT: usize = 8;
-const FSDCXM: usize = 4;
-const FSDG: usize = 1;
-const FSDGDT: usize = 8;
-const FSCLTX: usize = 43;
-const FSCATP: usize = 1;
-const FSCAUT: usize = 40;
-const FSCRSN: usize = 1;
-const FSSRDT: usize = 8;
-const FSCTLN: usize = 15;
-const FSCOP: usize = 5;
-const FSCPYS: usize = 5;
-const ENCRYP: usize = 1;
-const FBKGC: usize = 3;
-const ONAME: usize = 24;
-const OPHONE: usize = 18;
-const FL: usize = 12;
-const HL: usize = 6;
-const NUMI: usize = 3;
-const LISHn: usize = 6;
-const LIn: usize = 10;
 
-fn main() -> io::Result<()> {
-    let nitf_file = "input.nitf";
-    let (jp2_offset, jp2_size) = read_nitf_headers(nitf_file)?;
-    println!("JP2 Offset: {}, JP2 Size: {}", jp2_offset, jp2_size);
-    Ok(())
+
+#[derive(Default, Debug)]
+struct NITF {
+    // header values
+    FHDR:     usize,
+    FVER:     usize,
+    CLEVEL:   usize,
+    STYPE:    usize,
+    OSTAID:   usize,
+    FDT:      usize,
+    FTITLE:   usize,
+    FSCLAS:   usize,
+    FSCLSY:   usize,
+    FSCODE:   usize,
+    FSCTLH:   usize,
+    FSREL:    usize,
+    FSDCTP:   usize,
+    FSDCDT:   usize,
+    FSDCXM:   usize,
+    FSDG:     usize,
+    FSDGDT:   usize,
+    FSCLTX:   usize,
+    FSCATP:   usize,
+    FSCAUT:   usize,
+    FSCRSN:   usize,
+    FSSRDT:   usize,
+    FSCTLN:   usize,
+    FSDWNG:   usize,
+    FSDEVT:   usize,
+    FSCOP:    usize,
+    FSCPYS:   usize,
+    ENCRYP:   usize,
+    FBKGC:    usize,
+    ONAME:    usize,
+    OPHONE:   usize,
+    FL:       usize,
+    HL:       usize,
+    NUMI:     usize,
+    LISH_NNN: usize,
+    LI_NNN:   usize,
+    // non-header values
+    file_profile_name: String,
+    file_version: String,
+    header_length: usize,
+    num_images: usize,
+    image_header_lengths: Vec<usize>,
+    image_data_lengths: Vec<usize>
 }
 
-fn read_nitf_headers(nitf_file: &str) -> io::Result<(u64, u64)> {
-    let mut file = File::open(nitf_file)?;
 
-    let mut file_type = [0u8; FHDR];
-    let mut nitf_version = [0u8; FVER];
-    let mut c_level = [0u8; CLEVEL];
-    let mut s_type = [0u8; STYPE];
-    let mut ostaid = [0u8; OSTAID];
-    let mut fdt = [0u8; FDT];
-    let mut ftitle = [0u8; FTITLE];
-    let mut fsclas = [0u8; FSCLAS];
-    let mut fsclsy = [0u8; FSCLSY];
-    let mut fscode = [0u8; FSCODE];
-    let mut fsctlh = [0u8; FSCTLH];
-    let mut fsrel = [0u8; FSREL];
-    let mut fsdctp = [0u8; FSDCTP];
-    let mut fsdcdt = [0u8; FSDCDT];
-    let mut fsdcxm = [0u8; FSDCXM];
-    let mut fsdg = [0u8; FSDG];
-    let mut fsdgdt = [0u8; FSDGDT];
-    let mut fscltx = [0u8; FSCLTX];
-    let mut fscatp = [0u8; FSCATP];
-    let mut fscaut = [0u8; FSCAUT];
-    let mut fscrsn = [0u8; FSCRSN];
-    let mut fssrdt = [0u8; FSSRDT];
-    let mut fsctln = [0u8; FSCTLN];
-    let mut fscop = [0u8; FSCOP];
-    let mut fscpys = [0u8; FSCPYS];
-    let mut encryp = [0u8; ENCRYP];
-    let mut fbkgc = [0u8; FBKGC];
-    let mut oname = [0u8; ONAME];
-    let mut ophone = [0u8; OPHONE];
-    let mut fl = [0u8; FL];
-    let mut hl = [0u8; HL];
-    let mut numi = [0u8; NUMI];
-    file.read_exact(&mut file_type)?;
-    file.read_exact(&mut nitf_version)?;
-    file.read_exact(&mut c_level)?;
-    file.read_exact(&mut s_type)?;
-    file.read_exact(&mut ostaid)?;
-    file.read_exact(&mut fdt)?;
-    file.read_exact(&mut ftitle)?;
-    file.read_exact(&mut fsclas)?;
-    file.read_exact(&mut fsclsy)?;
-    file.read_exact(&mut fscode)?;
-    file.read_exact(&mut fsctlh)?;
-    file.read_exact(&mut fsrel)?;
-    file.read_exact(&mut fsdctp)?;
-    file.read_exact(&mut fsdcdt)?;
-    file.read_exact(&mut fsdcxm)?;
-    file.read_exact(&mut fsdg)?;
-    file.read_exact(&mut fsdgdt)?;
-    file.read_exact(&mut fscltx)?;
-    file.read_exact(&mut fscatp)?;
-    file.read_exact(&mut fscaut)?;
-    file.read_exact(&mut fscrsn)?;
-    file.read_exact(&mut fssrdt)?;
-    file.read_exact(&mut fsctln)?;
-    file.read_exact(&mut fscop)?;
-    file.read_exact(&mut fscpys)?;
-    file.read_exact(&mut encryp)?;
-    file.read_exact(&mut fbkgc)?;
-    file.read_exact(&mut oname)?;
-    file.read_exact(&mut ophone)?;
-    file.read_exact(&mut fl)?;
-    file.read_exact(&mut hl)?;
-    file.read_exact(&mut numi)?;
-    let file_type_str = String::from_utf8_lossy(&file_type);
-    let version_str = String::from_utf8_lossy(&nitf_version);
-    let c_level_str = String::from_utf8_lossy(&c_level);
-    let s_type_str = String::from_utf8_lossy(&s_type);
-    let ostaid_str = String::from_utf8_lossy(&ostaid);
-    let fdt_str = String::from_utf8_lossy(&fdt);
-    let ftitle_str = String::from_utf8_lossy(&ftitle);
-    let fsclas_str = String::from_utf8_lossy(&fsclas);
-    let fsclsy_str = String::from_utf8_lossy(&fsclsy);
-    let fscode_str = String::from_utf8_lossy(&fscode);
-    let fsctlh_str = String::from_utf8_lossy(&fsctlh);
-    let fsrel_str = String::from_utf8_lossy(&fsrel);
-    let fsdctp_str = String::from_utf8_lossy(&fsdctp);
-    let fsdcdt_str = String::from_utf8_lossy(&fsdcdt);
-    let fsdcxm_str = String::from_utf8_lossy(&fsdcxm);
-    let fsdg_str = String::from_utf8_lossy(&fsdg);
-    let fsdgdt_str = String::from_utf8_lossy(&fsdgdt);
-    let fscltx_str = String::from_utf8_lossy(&fscltx);
-    let fscatp_str = String::from_utf8_lossy(&fscatp);
-    let fscaut_str = String::from_utf8_lossy(&fscaut);
-    let fscrsn_str = String::from_utf8_lossy(&fscrsn);
-    let fssrdt_str = String::from_utf8_lossy(&fssrdt);
-    let fsctln_str = String::from_utf8_lossy(&fsctln);
-    let fscop_str = String::from_utf8_lossy(&fscop);
-    let fscpys_str = String::from_utf8_lossy(&fscpys);
-    let encryp_str = String::from_utf8_lossy(&encryp);
-    let fbkgc_str = String::from_utf8_lossy(&fbkgc);
-    let oname_str = String::from_utf8_lossy(&oname);
-    let ophone_str = String::from_utf8_lossy(&ophone);
-    let fl_str = String::from_utf8_lossy(&fl);
-    let hl_str = String::from_utf8_lossy(&hl);
-    let numi_str = String::from_utf8_lossy(&numi);
-    let num_images: usize = numi_str
-        .parse()
-        .expect("Image count string cannot be coerced to a number");
+impl NITF {
+    fn get_file_profile_name_and_version(self, file: &File) -> NITF {
+        let file_profile_name = read_string_from_file(&file, FHDR);
+        let file_version = read_string_from_file(&file, FVER);
 
-    // for img in 0..num_images {
-    //     let img
+        NITF {
+            file_profile_name: file_profile_name,
+            file_version: file_version,
+            ..self
+        }
+    }
 
-    println!("File Type: {}", file_type_str);
-    println!("NITF Version: {}", version_str);
-    println!("C Level: {}", c_level_str);
-    println!("S Type: {}", s_type_str);
-    println!("OSTAID: {}", ostaid_str);
-    println!("FDT: {}", fdt_str);
-    println!("FTitle: {}", ftitle_str);
-    println!("FSCLAS: {}", fsclas_str);
-    println!("FSCLSY: {}", fsclsy_str);
-    println!("FSCode: {}", fscode_str);
-    println!("FSCTLH: {}", fsctlh_str);
-    println!("FSREL: {}", fsrel_str);
-    println!("FSSCTP: {}", fsdctp_str);
-    println!("FSSCDT: {}", fsdcdt_str);
-    println!("FSDCXM: {}", fsdcxm_str);
-    println!("FSDG: {}", fsdg_str);
-    println!("FSDGDT: {}", fsdgdt_str);
-    println!("FSCLTX: {}", fscltx_str);
-    println!("FSCATP: {}", fscatp_str);
-    println!("FSCAUT: {}", fscaut_str);
-    println!("FSCRSN: {}", fscrsn_str);
-    println!("FSSRDT: {}", fssrdt_str);
-    println!("FSCTLN: {}", fsctln_str);
-    println!("FSCOP: {}", fscop_str);
-    println!("FSCPYS: {}", fscpys_str);
-    println!("ENCRYP: {}", encryp_str);
-    println!("FBKGC: {}", fbkgc_str);
-    println!("ONAME: {}", oname_str);
-    println!("OPHONE: {}", ophone_str);
-    println!("FL: {}", fl_str);
-    println!("HL: {}", hl_str);
-    println!("NUMI: {}", numi_str);
-    if !file_type_str.starts_with("NITF") {
+    fn load_v02_10(self) -> NITF {
+        NITF {
+            FHDR:      4,
+            FVER:      5,
+            CLEVEL:    2,
+            STYPE:     4,
+            OSTAID:   10,
+            FDT:      14,
+            FTITLE:   80,
+            FSCLAS:    1,
+            FSCLSY:    2,
+            FSCODE:   11,
+            FSCTLH:    2,
+            FSREL:    20,
+            FSDCTP:    2,
+            FSDCDT:    8,
+            FSDCXM:    4,
+            FSDG:      1,
+            FSDGDT:    8,
+            FSCLTX:   43,
+            FSCATP:    1,
+            FSCAUT:   40,
+            FSCRSN:    1,
+            FSSRDT:    8,
+            FSCTLN:   15,
+            FSCOP:     5,
+            FSCPYS:    5,
+            ENCRYP:    1,
+            FBKGC:     3,
+            ONAME:    24,
+            OPHONE:   18,
+            FL:       12,
+            HL:        6,
+            NUMI:      3,
+            LISH_NNN:  6,
+            LI_NNN:   10,
+            ..self
+        }
+    }
+
+    fn load_v02_00(self) -> NITF {
+        NITF {
+            FHDR:      9,
+            CLEVEL:    2,
+            STYPE:     4,
+            OSTAID:   10,
+            FDT:      14,
+            FTITLE:   80,
+            FSCLAS:    1,
+            FSCODE:   40,
+            FSCTLH:   40,
+            FSREL:    40,
+            FSCAUT:   20,
+            FSCTLN:   20,
+            FSDWNG:    6,
+            FSDEVT:   40,
+            FSCOP:     5,
+            FSCPYS:    5,
+            ENCRYP:    1,
+            ONAME:    27,
+            OPHONE:   18,
+            FL:       12,
+            HL:        6,
+            NUMI:      3,
+            LISH_NNN:  6,
+            LI_NNN:   10,
+            ..self
+        }
+    }
+
+    // not implemented
+    fn load_v01_10(self) -> NITF {
+        NITF {
+            FHDR:     0,
+            FVER:     0,
+            CLEVEL:   0,
+            STYPE:    0,
+            OSTAID:   0,
+            FDT:      0,
+            FTITLE:   0,
+            FSCLAS:   0,
+            FSCLSY:   0,
+            FSCODE:   0,
+            FSCTLH:   0,
+            FSREL:    0,
+            FSDCTP:   0,
+            FSDCDT:   0,
+            FSDCXM:   0,
+            FSDG:     0,
+            FSDGDT:   0,
+            FSCLTX:   0,
+            FSCATP:   0,
+            FSCAUT:   0,
+            FSCRSN:   0,
+            FSSRDT:   0,
+            FSCTLN:   0,
+            FSDWNG:   0,
+            FSDEVT:   0,
+            FSCOP:    0,
+            FSCPYS:   0,
+            ENCRYP:   0,
+            FBKGC:    0,
+            ONAME:    0,
+            OPHONE:   0,
+            FL:       0,
+            HL:       0,
+            NUMI:     0,
+            LISH_NNN: 0,
+            LI_NNN:   0,
+            ..self
+        }
+    }
+
+    fn get_header_length_and_num_images(self, mut file: &File) -> NITF {
+        let header_length_location =
+            self.FHDR +
+            self.FVER +
+            self.CLEVEL +
+            self.STYPE +
+            self.OSTAID +
+            self.FDT +
+            self.FTITLE +
+            self.FSCLAS +
+            self.FSCLSY +
+            self.FSCODE +
+            self.FSCTLH +
+            self.FSREL +
+            self.FSDCTP +
+            self.FSDCDT +
+            self.FSDCXM +
+            self.FSDG +
+            self.FSDGDT +
+            self.FSCLTX +
+            self.FSCATP +
+            self.FSCAUT +
+            self.FSCRSN +
+            self.FSSRDT +
+            self.FSCTLN +
+            self.FSDWNG +
+            self.FSDEVT +
+            self.FSCOP +
+            self.FSCPYS +
+            self.ENCRYP +
+            self.FBKGC +
+            self.ONAME +
+            self.OPHONE +
+            self.FL;
+        
+        let _ = file.seek(SeekFrom::Start(header_length_location.try_into().unwrap()));
+
+        let header_length = read_int_from_file(&file, self.HL);
+        let num_images = read_int_from_file(&file, self.NUMI);
+        
+        NITF {
+            header_length: header_length,
+            num_images: num_images,
+            ..self
+        }
+    }
+
+    fn save_images(self, mut file: &File) -> NITF {
+        let mut image_header_lengths = std::vec::Vec::new(); 
+        let mut image_data_lengths = std::vec::Vec::new(); 
+
+        for _ in 0..self.num_images {
+            let lish = read_int_from_file(&file, self.LISH_NNN);
+            let li = read_int_from_file(&file, self.LI_NNN);
+            
+            image_header_lengths.push(lish);
+            image_data_lengths.push(li);
+        }
+
+        let _ = file.seek(SeekFrom::Start(self.header_length.try_into().unwrap()));
+        for image_number in 0..self.num_images {
+            let mut image_header = vec![0u8; image_header_lengths[image_number]]; 
+            let _ = file.read_exact(&mut image_header);
+
+            let mut image_data = vec![0u8; image_data_lengths[image_number]];
+            let _ = file.read_exact(&mut image_data);
+
+            let path = format!("./testdata/image_{}.jp2", image_number + 1);
+            let mut out_file = File::create(path).expect("Failed to create file: {path}");
+            let _ = out_file.write_all(&image_data);
+        }
+
+        NITF {
+            image_header_lengths: image_header_lengths,
+            image_data_lengths: image_data_lengths,
+            ..self
+        }
+    }
+}
+
+
+// variable input and output dirs
+fn main() -> io::Result<()> {
+    let nitf_file_path = "./testdata/input.nitf";
+    let mut nitf_file = File::open(nitf_file_path).expect("Failed to open file: {nitf_file_path}.");
+
+    let nitf = NITF { ..Default::default() };
+    let nitf = nitf.get_file_profile_name_and_version(&nitf_file);
+
+    if nitf.file_profile_name != "NITF" {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
             "Not a valid NITF file",
         ));
     }
 
-    println!("NUMI AS NUMBER: {}", num_images);
+    let nitf = match nitf.file_version.as_str() {
+        "02.10" => nitf.load_v02_10(),
+        "02.00" => nitf.load_v02_00(),
+        "01.10" =>
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "Version 1.1 not yet implemented.",
+        )),
+        _ => 
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "Not a supported NITF file version.",
+        )),
+    };
 
-    //Read Images
-    if num_images > 0 {
-        let mut image_header_lens = std::vec::Vec::new(); 
-        let mut image_data_lens = std::vec::Vec::new(); 
-        for img in 0..num_images {
-            let img_no=img+1;
-            let mut lish = [0u8; LISHn];
-            let mut lin = [0u8; LIn];
-            file.read_exact(&mut lish)?;
-            file.read_exact(&mut lin)?;
-            let lish_str = String::from_utf8_lossy(&lish);
-            let lin_str = String::from_utf8_lossy(&lin);
-            println!("IMAGE{} HEADER LEN: {}", img_no, lish_str);
-            println!("IMAGE{} DATA LEN: {}", img_no, lin_str);
-            let image_header_len: usize = lish_str
-                .parse()
-                .expect("Image Header Len String cannot be coerced to a number");
-            let image_data_len: usize = lin_str
-                .parse()
-                .expect("Image Data Len String cannot be coerced to a number");
-            image_header_lens.push(image_header_len);
-            image_data_lens.push(image_data_len);
-            // let mut img_seg = vec![0u8; image_header_len+image_data_len];
-            // let _ = file.read_exact(&mut img_seg); //remove 
-        }
-        let _ = file.seek(SeekFrom::Start(hl_str.parse().expect("Failed to coerce Header Length to u64")));
-        for img in 0..num_images {
-            let mut img_header = vec![0u8; image_header_lens[img]]; 
-            let _ = file.read_exact(&mut img_header);
-            let mut img_data = vec![0u8; image_data_lens[img]];
-            let _ = file.read_exact(&mut img_data);
-            let path = format!("img{}.jp2", img);
-            let mut out_file = File::create(path)?;
-            let _ = out_file.write_all(&img_data);
-        };
-    }
-    Ok((0,0))
+    let nitf = nitf.get_header_length_and_num_images(&nitf_file);
+    let nitf = nitf.save_images(&nitf_file);
+
+    dbg!(&nitf);
+
+    Ok(())
+}
+
+
+fn read_string_from_file(mut file: &File, length: usize) -> String {
+    let mut file_slice_bytes = vec![0u8; length];
+    let _ = file.read_exact(&mut file_slice_bytes);
+    let file_slice_str = String::from_utf8_lossy(&file_slice_bytes).to_string();
+    file_slice_str
+}
+
+
+fn read_int_from_file(mut file: &File, length: usize) -> usize {
+    let mut file_slice_bytes = vec![0u8; length];
+    let _ = file.read_exact(&mut file_slice_bytes);
+    let file_slice_str = String::from_utf8_lossy(&file_slice_bytes);
+    let file_slice_int = file_slice_str
+        .parse()
+        .expect("File Slice String cannot be coerced to a number.");
+        file_slice_int
 }
