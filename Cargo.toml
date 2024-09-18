@@ -1,0 +1,6 @@
+[package]
+name = "nitf-grip-n-rip"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
