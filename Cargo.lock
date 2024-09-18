@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "nitf-grip-n-rip"
+name = "nitf-gnr"
 version = "0.1.0"
