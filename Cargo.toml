@@ -4,5 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+name = "nitf_gnr"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
+rand = "0.8.4"
+clap = { version = "4.0", features = ["derive"]}
+whoami = "1.5.2"
+chrono = "0.4"

@@ -1,2 +1,7 @@
 /target
 /testdata
+ctest/TESTOUT
+ctest/nitfs
+ctest/meta
+java/output0.jp2
+java/output1.jp2
