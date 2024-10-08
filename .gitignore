@@ -5,3 +5,8 @@ ctest/nitfs
 ctest/meta
 java/output0.jp2
 java/output1.jp2
+ctest/call_lib
+java/out
+tests/java/out
+tests/nitf
+tests/out

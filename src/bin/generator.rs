@@ -1,7 +1,10 @@
+use std::time::Instant;
+
 use rand::Rng;
-use clap::{Arg, Command};
+use clap::{Arg, ArgAction, Command};
 use chrono::{Utc, Datelike, Timelike};
-use nitf_gnr::parser::{file_ops::read_string_from_file, nitf21 as nitf};
+use nitf_gnr::modify::parser::nitf21 as nitf;
+use rayon::prelude::*;
 
 fn main() {
     let matches = Command::new("nitf-gnr")
@@ -44,59 +47,70 @@ fn main() {
                 .required(false)
                 .value_parser(clap::value_parser!(u32)),
         )
+        .arg(
+            Arg::new("sequential")
+                .short('s')
+                .long("sequential")
+                .help("Tells the generator not to parallelize the generation of NITF's")
+                .action(ArgAction::SetTrue)
+                .required(false)
+        )
         .get_matches();
 
     let input_path = matches.get_one::<std::string::String>("input").unwrap().to_string();
     let output_prefix = matches.get_one::<std::string::String>("output-prefix").unwrap().to_string();
     let count: u32 = *matches.get_one("count").unwrap();
     let persistance: Option<&u32> = matches.get_one("persistant");
+    let is_sequential = matches.get_flag("sequential");
 
-    println!("Input path: {}", input_path);
-    println!("Output prefix: {}", output_prefix);
-    println!("Count: {}", count);
-    println!("Persistance 1st: {}", count);
-    
-    match persistance {
-        Some(p) => {
+    let descriptor = (persistance, is_sequential);
+    match descriptor{
+        (Some(p), false) => {
             loop {
+                let start = Instant::now();
+                println!("Generating {} NITF's", count);
                 generate_nitfs(&input_path, &output_prefix, count);
+                println!("Generated {} NITF's in {:.2?}", count, start.elapsed());
                 let secs = (p*60) as u64;
                 std::thread::sleep(std::time::Duration::from_secs(secs));
             }
         },
-        None => {
+        (Some(p), true) => {
+            loop {
+                println!("Generating {} NITF's", count);
+                let start = Instant::now();
+                generate_nitfs_seq(&input_path, &output_prefix, count);
+                println!("Generated {} NITF's in {:.2?}", count, start.elapsed());
+                let secs = (p*60) as u64;
+                std::thread::sleep(std::time::Duration::from_secs(secs));
+            }
+        },
+        (None, false) => {
+            println!("Generating {} NITF's", count);
+            let start = Instant::now();
             generate_nitfs(&input_path, &output_prefix, count);
+            println!("Generated {} NITF's in {:.2?}", count, start.elapsed());
+        },
+        (None, true) => {
+            println!("Generating {} NITF's", count);
+            let start = Instant::now();
+            generate_nitfs_seq(&input_path, &output_prefix, count);
+            println!("Generated {} NITF's in {:.2?}", count, start.elapsed());
         }
     }
 
 }
 
-fn generate_nitfs(path: &str, o_prefix: &str, count: u32) {
-    use nitf::NitfHeader21 as N;
+fn generate_nitfs_seq(path: &str, o_prefix: &str, count: u32) {
     for _i in 0..count {
-        let output = alter_nitf(path, o_prefix);
-        if output.is_empty() {
-            continue;
-        }
-        let o_path = o_prefix.to_string() + &output;
-        let file = std::fs::File::open(&o_path).unwrap();
-        let origlens = N::get_value(N::ONAME);
-        let origoff = N::get_offset(N::ONAME, None);
-        let originator = read_string_from_file(&file, origoff, origlens);
-        let flens = N::get_value(N::FTITLE);
-        let foff = N::get_offset(N::FTITLE, None);
-        let filename = read_string_from_file(&file, foff, flens);
-        let fdt = N::get_value(N::FDT);
-        let fdt_off = N::get_offset(N::FDT, None);
-        let file_date_time = read_string_from_file(&file, fdt_off, fdt);
-        let ostaid = N::get_value(N::OSTAID);
-        let ostaid_off = N::get_offset(N::OSTAID, None);
-        let ostaid_str = read_string_from_file(&file, ostaid_off, ostaid);
-        println!("File Date Time: {}", file_date_time);
-        println!("Filename: {}", filename);
-        println!("OSTAID: {}", ostaid_str);
-        println!("Originator: {}", originator);
+        _ = alter_nitf(path, o_prefix);
     };
+}
+
+fn generate_nitfs(path: &str, o_prefix: &str, count: u32) {
+    (0..count).into_par_iter().for_each(|_i| {
+        _ = alter_nitf(path, o_prefix);
+    });
 }
 
 fn alter_nitf(path: &str, o_prefix: &str) -> std::string::String {

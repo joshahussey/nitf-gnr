@@ -1,5 +1,5 @@
-use crate::parser::file_ops::read_string_from_file;
-use crate::parser::file_ops::read_int_from_file;
+use crate::modify::parser::file_ops::read_string_from_file;
+use crate::modify::parser::file_ops::read_int_from_file;
 use std::fs::File;
 
 const FHDR: usize = 4;

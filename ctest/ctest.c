@@ -5,6 +5,7 @@
 
 typedef void (*extract_jp2_fn)(const char *inputpath, const char *outputpath);
 typedef void (*extract_des_fn)(const char *inputpath, const char *outputpath);
+typedef void (*get_version_fn)(const char *inputpath);
 typedef int (*get_num_images_from_file_fn)(const char *inputpath);
 typedef int (*get_num_graphics_from_file_fn)(const char *inputpath);
 typedef int (*get_num_text_files_from_file_fn)(const char *inputpath);
@@ -29,6 +30,13 @@ int main() {
 
     extract_des_fn extract_des = (extract_des_fn)dlsym(lib_handle, "extract_des");
     if (!extract_des) {
+        fprintf(stderr, "Failed to locate function: %s\n", dlerror());
+        dlclose(lib_handle);
+        return 1;
+    }
+
+    get_version_fn get_version = (get_version_fn)dlsym(lib_handle, "get_version");
+    if (!get_version) {
         fprintf(stderr, "Failed to locate function: %s\n", dlerror());
         dlclose(lib_handle);
         return 1;
@@ -66,12 +74,13 @@ int main() {
     }
 
     // Prepare the string input
-    const char *path = "./nitfs/Japan_1_Uncompressed.ntf";
+    const char *path = "./nitfs/test.nitf";
     const char *out = "/opt/nitf-gnr/ctest/TESTOUT/";
 
     // Call the Rust function
     extract_jp2(path, out);
     extract_des(path, out);
+    get_version(path);
     int img = get_num_images(path);
     printf("Number of images: %d\n", img);
     int graphics = get_num_graphics(path);
