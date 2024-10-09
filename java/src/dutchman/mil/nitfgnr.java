@@ -1,5 +1,7 @@
-import java.io.File;
+package dutchman.mil;
+
 import java.io.FileDescriptor;
+import java.io.File;
 import java.io.FileInputStream;
 import java.lang.reflect.Field;
 
@@ -45,23 +47,23 @@ public class nitfgnr {
         return gnr.extractDesHeader(rawFd, index);
     }
 
-    public static void copyDesSegmants(File input, File output) {
+    public static void copyDesSegments(File input, File output) {
         long rawInputFd = rawFdFromFile(input);
         long rawOutputFd = rawFdFromFile(output);
         nitfgnr gnr = new nitfgnr();
-        gnr.copyDesSegmants(rawInputFd, rawOutputFd);
+        gnr.copyDesSegments(rawInputFd, rawOutputFd);
     }
     
     //Native functions no wrapper
     public static native byte[] addDesBytes(byte[] nitfBytes, byte[]desHeaderBytes, byte[] desDataBytes);
-    public static native void copyDesSegmantsFromPaths(String input, String output);
+    public static native void copyDesSegmentsFromPaths(String input, String output);
     public static native void extractAllJp2(String input_path, String output_path);
     public static native byte[] extractJp2Index(String input_path, int index);
 
 
     //Native functions
     private native String getVersion(long fd);
-    private native void copyDesSegmants(long inputFd, long outputFd);
+    private native void copyDesSegments(long inputFd, long outputFd);
     private native int getHeaderLength(long fd);
     private native int getNumImages(long fd);
     private native int getNumDes(long fd);

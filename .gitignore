@@ -10,3 +10,6 @@ java/out
 tests/java/out
 tests/nitf
 tests/out
+c/nitfs
+c/call_lib
+c/meta

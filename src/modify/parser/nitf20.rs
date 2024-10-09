@@ -202,7 +202,7 @@ impl NitfHeader20 {
                 if nitf_file.is_none() {panic!("You must provide a file to get the offset of this header field.");}
                 N::get_offset(LTSHNNN, nitf_file) + N::get_value(LTSHNNN)
             }
-            //Anything after the dynamic segmants
+            //Anything after the dynamic segments
             XHDL | UDHDL | NUMRES | NUMDES => {
                 if nitf_file.is_none() {panic!("You must provide a file to get the offset of this header field.");}
                 let hl_offset = N::get_offset(HL, None);

@@ -102,7 +102,7 @@ pub fn extract_des(mut file: &File, outpath: &str) {
     }
 }
 
-pub fn copy_des_segmants(input_file: &mut File, output_file: &mut File) {
+pub fn copy_des_segments(input_file: &mut File, output_file: &mut File) {
     //This is a complicated process. Ensure that you modify the file from the end to the beggining
     //so that you do not alter any offsets that you are relying on.
     //
@@ -125,14 +125,8 @@ pub fn copy_des_segmants(input_file: &mut File, output_file: &mut File) {
     println!("Output HL: {}", output_hl);
     println!("Output FL: {}", output_fl);
     println!("Output File New Length: {}", output_fl + des_header_field_length + des_data_length);
-    //Get output header field length and data length
-    //let output_des_field_start = N::get_offset(NUMDES, Some(output_file));
     let output_des_field_end = N::get_offset(NUMRES, Some(output_file));
-    //let output_des_start = N::get_des_segment_start(output_file);
     let output_des_end = N::get_reserved_extension_segment_start(output_file);
-    //Out lengths 
-    //let output_des_header_field_length = output_des_field_end - output_des_field_start;
-    //let output_des_data_length = output_des_end - output_des_start;
     
     //Get outfile as buffer
     let out_buf = &mut Vec::new();

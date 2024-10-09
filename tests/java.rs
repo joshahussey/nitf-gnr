@@ -128,4 +128,23 @@ pub fn extract_jp2_index() {
     assert_eq!(stdout.trim(), helpers::calculate_file_crc32("tests/out/extractAllJp20.jp2").unwrap().to_string());
 }
 
-
+#[test]
+pub fn get_numdes() {
+    let output = Command::new("java")
+        .args([
+            "--add-opens",
+            "java.base/java.io=ALL-UNNAMED",
+            "-D.java.library.path=target/debug",
+            "-cp",
+            "tests/java/out:java/out/:nitfgnr.jar",
+            "tests/java/getNumDes.java",
+        ])
+        .output()
+        .expect("Failed to run getNumDes");
+    if !output.status.success() {
+        let stderr = str::from_utf8(&output.stderr).unwrap_or("Could not read stderr");
+        println!("{}", stderr);
+    }
+    let stdout = str::from_utf8(&output.stdout).unwrap();
+    assert_eq!(stdout.trim(), "3");
+}

@@ -14,26 +14,26 @@ use std::os::windows::io::{FromRawHandle, RawHandle};
 use winapi::um::handleapi::CloseHandle;
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_getVersion(env: JNIEnv, _class: JClass, fd: jlong) -> jstring {
+pub extern "system" fn Java_dutchman_mil_nitfgnr_getVersion(env: JNIEnv, _class: JClass, fd: jlong) -> jstring {
     let file = get_java_file(fd);
     let (fhdr, ver) = core::get_version(&file);
     **env.new_string(fhdr+&ver).expect("Failed to create new string")
 }
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_getHeaderLength(_env: JNIEnv, _class: JClass, fd: jlong) -> jint {
+pub extern "system" fn Java_dutchman_mil_nitfgnr_getHeaderLength(_env: JNIEnv, _class: JClass, fd: jlong) -> jint {
     let file = get_java_file(fd);
     read_int_from_file(&file, N::get_offset(HL, None), N::get_value(HL)) as jint
 }
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_getNumImages(_env: JNIEnv, _class: JClass, fd: jlong) -> jint {
+pub extern "system" fn Java_dutchman_mil_nitfgnr_getNumImages(_env: JNIEnv, _class: JClass, fd: jlong) -> jint {
     let file = get_java_file(fd);
     read_int_from_file(&file, N::get_offset(NUMI, None), N::get_value(NUMI)) as jint
 }
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_extractJp2Index(
+pub extern "system" fn Java_dutchman_mil_nitfgnr_extractJp2Index(
     mut env: JNIEnv,
     _class: JClass,
     input_path: JString,
@@ -49,7 +49,7 @@ pub extern "system" fn Java_nitfgnr_extractJp2Index(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_extractAllJp2(
+pub extern "system" fn Java_dutchman_mil_nitfgnr_extractAllJp2(
     mut env: JNIEnv,
     _class: JClass,
     input_path: JString,
@@ -66,13 +66,13 @@ pub extern "system" fn Java_nitfgnr_extractAllJp2(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_getNumDes(_env: JNIEnv, _class: JClass, fd: jlong) -> jint {
+pub extern "system" fn Java_dutchman_mil_nitfgnr_getNumDes(_env: JNIEnv, _class: JClass, fd: jlong) -> jint {
     let file = get_java_file(fd);
     read_int_from_file(&file, N::get_offset(NUMDES, Some(&file)), N::get_value(NUMDES)) as jint
 }
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_extractDesHeader (
+pub extern "system" fn Java_dutchman_mil_nitfgnr_extractDesHeader (
     env: JNIEnv,
     _class: JClass,
     fd: jlong,
@@ -84,7 +84,7 @@ pub extern "system" fn Java_nitfgnr_extractDesHeader (
 }
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_extractDes (
+pub extern "system" fn Java_dutchman_mil_nitfgnr_extractDes (
     env: JNIEnv,
     _class: JClass,
     fd: jlong,
@@ -96,7 +96,7 @@ pub extern "system" fn Java_nitfgnr_extractDes (
 }
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_copyDesSegmants(
+pub extern "system" fn Java_dutchman_mil_nitfgnr_copyDesSegments(
     _env: JNIEnv,
     _class: JClass,
     input_fd: jlong,
@@ -104,15 +104,15 @@ pub extern "system" fn Java_nitfgnr_copyDesSegmants(
 ) {
     let mut input_file = get_java_file(input_fd);
     let mut output_file = get_java_file(output_fd);
-    core::copy_des_segmants(&mut input_file, &mut output_file);
+    core::copy_des_segments(&mut input_file, &mut output_file);
 }
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_copyDesSegmantsFromPaths<'local>(
-    mut env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    input_path: JString<'local>,
-    output_path: JString<'local>,
+pub extern "system" fn Java_dutchman_mil_nitfgnr_copyDesSegmentsFromPaths(
+    mut env: JNIEnv,
+    _class: JClass,
+    input_path: JString,
+    output_path: JString,
 ) {
 
     let input_string: String = env.get_string(&input_path).expect("Couldn't get input path").into();
@@ -127,11 +127,11 @@ pub extern "system" fn Java_nitfgnr_copyDesSegmantsFromPaths<'local>(
         .write(true)
         .open(output_string)
         .expect("Failed to open file");
-    core::copy_des_segmants(&mut input_file, &mut output_file);
+    core::copy_des_segments(&mut input_file, &mut output_file);
 }
 
 #[no_mangle]
-pub extern "system" fn Java_nitfgnr_addDesBytes (
+pub extern "system" fn Java_dutchman_mil_nitfgnr_addDesBytes (
     env: JNIEnv,
     _class: JClass,
     nitf_bytes: jbyteArray,

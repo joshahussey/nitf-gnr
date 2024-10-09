@@ -1,6 +1,8 @@
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
+import dutchman.mil.nitfgnr;
+
 public class extractJp2Index {
     public static void main(String[] args) {
         String input = new String("/opt/nitf-gnr/tests/nitf/Japan_1_Uncompressed.ntf");
