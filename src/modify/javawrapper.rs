@@ -68,7 +68,7 @@ pub extern "system" fn Java_dutchman_mil_nitfgnr_extractAllJp2(
 #[no_mangle]
 pub extern "system" fn Java_dutchman_mil_nitfgnr_getNumDes(_env: JNIEnv, _class: JClass, fd: jlong) -> jint {
     let file = get_java_file(fd);
-    read_int_from_file(&file, N::get_offset(NUMDES, Some(&file)), N::get_value(NUMDES)) as jint
+    core::get_numdes(&file) as jint
 }
 
 #[no_mangle]
@@ -78,6 +78,7 @@ pub extern "system" fn Java_dutchman_mil_nitfgnr_extractDesHeader (
     fd: jlong,
     index: jint,
 ) -> jbyteArray {
+    #[cfg(all(debug_assertions, not(test)))]
     println!("Extracting DES Header {}", index);
     let file = get_java_file(fd);
     ovu8_to_jbytearray(env, core::extract_des_header_fields_index(&file, index as usize))
@@ -90,6 +91,7 @@ pub extern "system" fn Java_dutchman_mil_nitfgnr_extractDes (
     fd: jlong,
     index: jint,
 ) -> jbyteArray {
+    #[cfg(all(debug_assertions, not(test)))]
     println!("Extracting DES {}", index);
     let file = get_java_file(fd);
     ovu8_to_jbytearray(env, core::extract_des_index(&file, index as usize))
@@ -131,24 +133,100 @@ pub extern "system" fn Java_dutchman_mil_nitfgnr_copyDesSegmentsFromPaths(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_dutchman_mil_nitfgnr_addDesBytes (
-    env: JNIEnv,
+pub extern "system" fn Java_dutchman_mil_nitfgnr_copyGraphicSegmentsFromPaths(
+    mut env: JNIEnv,
     _class: JClass,
-    nitf_bytes: jbyteArray,
-    des_header_bytes: jbyteArray,
-    des_bytes: jbyteArray
-) -> jbyteArray {
-    println!("Adding DES bytes to NITF");
-    let mut nitf_bytes = jbytearray_to_vec(&env, nitf_bytes);
-    println!("NITF bytes conversion finished.");
-    let des_header_bytes = jbytearray_to_vec(&env, des_header_bytes);
-    println!("DES Header bytes conversion finished.");
-    let des_bytes = jbytearray_to_vec(&env, des_bytes);
-    println!("DES bytes conversion finished.");
-    core::add_des_bytes(&mut nitf_bytes, &des_header_bytes, &des_bytes);
-    println!("DES bytes added to NITF.");
-    ovu8_to_jbytearray(env, Some(nitf_bytes))
+    input_path: JString,
+    output_path: JString,
+) {
+
+    let input_string: String = env.get_string(&input_path).expect("Couldn't get input path").into();
+    let output_string: String = env.get_string(&output_path).expect("Couldn't get input path").into();
+    let mut input_file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(input_string)
+        .expect("Failed to open file");
+    let mut output_file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(output_string)
+        .expect("Failed to open file");
+    core::copy_graphic_segments(&mut input_file, &mut output_file);
 }
+
+#[no_mangle]
+pub extern "system" fn Java_dutchman_mil_nitfgnr_copyGTDSegmentsFromPaths(
+    mut env: JNIEnv,
+    _class: JClass,
+    input_path: JString,
+    output_path: JString,
+) {
+
+    let input_string: String = env.get_string(&input_path).expect("Couldn't get input path").into();
+    let output_string: String = env.get_string(&output_path).expect("Couldn't get input path").into();
+    let mut input_file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(input_string)
+        .expect("Failed to open file");
+    let mut output_file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(output_string)
+        .expect("Failed to open file");
+    core::copy_graphic_segments(&mut input_file, &mut output_file);
+    core::copy_text_segments(&mut input_file, &mut output_file);
+    core::copy_des_segments(&mut input_file, &mut output_file);
+}
+
+#[no_mangle]
+pub extern "system" fn Java_dutchman_mil_nitfgnr_copyTextSegmentsFromPaths(
+    mut env: JNIEnv,
+    _class: JClass,
+    input_path: JString,
+    output_path: JString,
+) {
+
+    let input_string: String = env.get_string(&input_path).expect("Couldn't get input path").into();
+    let output_string: String = env.get_string(&output_path).expect("Couldn't get input path").into();
+    let mut input_file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(input_string)
+        .expect("Failed to open file");
+    let mut output_file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(output_string)
+        .expect("Failed to open file");
+    core::copy_text_segments(&mut input_file, &mut output_file);
+}
+
+// #[no_mangle]
+// pub extern "system" fn Java_dutchman_mil_nitfgnr_addDesBytes (
+//     env: JNIEnv,
+//     _class: JClass,
+//     nitf_bytes: jbyteArray,
+//     des_header_bytes: jbyteArray,
+//     des_bytes: jbyteArray
+// ) -> jbyteArray {
+//     #[cfg(all(debug_assertions, not(test)))]
+//     println!("Adding DES bytes to NITF");
+//     let mut nitf_bytes = jbytearray_to_vec(&env, nitf_bytes);
+//     #[cfg(all(debug_assertions, not(test)))]
+//     println!("NITF bytes conversion finished.");
+//     let des_header_bytes = jbytearray_to_vec(&env, des_header_bytes);
+//     #[cfg(all(debug_assertions, not(test)))]
+//     println!("DES Header bytes conversion finished.");
+//     let des_bytes = jbytearray_to_vec(&env, des_bytes);
+//     #[cfg(all(debug_assertions, not(test)))]
+//     println!("DES bytes conversion finished.");
+//     core::add_des_bytes(&mut nitf_bytes, &des_header_bytes, &des_bytes);
+//     #[cfg(all(debug_assertions, not(test)))]
+//     println!("DES bytes added to NITF.");
+//     ovu8_to_jbytearray(env, Some(nitf_bytes))
+// }
 
 //Private helper functions
 fn get_java_file(fd: jlong) -> ManuallyDrop<File> {
@@ -168,6 +246,7 @@ fn get_java_file_owned(fd: jlong) -> File {
 
 fn get_java_file_from_path(env: &mut JNIEnv, path: jstring) -> File {
     let path = jstring_to_string(env, path);
+    #[cfg(all(debug_assertions, not(test)))]
     println!("Opening file: {}", path);
     let file = std::fs::OpenOptions::new()
         .read(true)

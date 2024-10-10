@@ -13,3 +13,5 @@ tests/out
 c/nitfs
 c/call_lib
 c/meta
+java/docs
+java/jar

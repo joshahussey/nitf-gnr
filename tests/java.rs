@@ -1,4 +1,4 @@
-use nitf_gnr::modify::core::get_num_des;
+use nitf_gnr::modify::core::{get_numdes, get_nums, get_numt};
 use std::fs;
 use std::process::Command;
 use std::str;
@@ -59,8 +59,8 @@ pub fn copy_des() {
     let valid_num_des = {
         let file = fs::File::open("tests/out/copyDes.ntf").expect("Failed to open file");
         let file2 = fs::File::open("tests/nitf/copyDes.ntf").expect("Failed to open file");
-        let num_des_pre = get_num_des(&file);
-        let num_des_add = get_num_des(&file2);
+        let num_des_pre = get_numdes(&file);
+        let num_des_add = get_numdes(&file2);
         num_des_pre + num_des_add
     };
     let output = Command::new("java")
@@ -81,8 +81,70 @@ pub fn copy_des() {
     let stdout = str::from_utf8(&output.stdout).unwrap();
     println!("{}", stdout);
     let file = fs::File::open("tests/out/copyDes.ntf").expect("Failed to open file");
-    let num_des_post = get_num_des(&file);
+    let num_des_post = get_numdes(&file);
     assert_eq!(num_des_post, valid_num_des);
+}
+
+#[test]
+pub fn copy_text() {
+    let valid_numt = {
+        let file = fs::File::open("tests/out/copyText.ntf").expect("Failed to open file");
+        let file2 = fs::File::open("tests/nitf/copyText.ntf").expect("Failed to open file");
+        let numt_pre = get_numt(&file);
+        let numt_add = get_numt(&file2);
+        numt_pre + numt_add
+    };
+    let output = Command::new("java")
+        .args([
+            "--add-opens",
+            "java.base/java.io=ALL-UNNAMED",
+            "-D.java.library.path=target/debug",
+            "-cp",
+            "tests/java/out:java/out/:nitfgnr.jar",
+            "tests/java/copyText.java",
+        ])
+        .output()
+        .expect("Failed to run copyDes");
+    if !output.status.success() {
+        let stderr = str::from_utf8(&output.stderr).unwrap_or("Could not read stderr");
+        println!("{}", stderr);
+    }
+    let stdout = str::from_utf8(&output.stdout).unwrap();
+    println!("{}", stdout);
+    let file = fs::File::open("tests/out/copyText.ntf").expect("Failed to open file");
+    let numt_post = get_numt(&file);
+    assert_eq!(numt_post, valid_numt);
+}
+
+#[test]
+pub fn copy_graphic() {
+    let valid_nums = {
+        let file = fs::File::open("tests/out/copyGraphic.ntf").expect("Failed to open file");
+        let file2 = fs::File::open("tests/nitf/copyGraphic.ntf").expect("Failed to open file");
+        let num_g_pre = get_nums(&file);
+        let num_g_add = get_nums(&file2);
+        num_g_pre + num_g_add
+    };
+    let output = Command::new("java")
+        .args([
+            "--add-opens",
+            "java.base/java.io=ALL-UNNAMED",
+            "-D.java.library.path=target/debug",
+            "-cp",
+            "tests/java/out:java/out/:nitfgnr.jar",
+            "tests/java/copyGraphic.java",
+        ])
+        .output()
+        .expect("Failed to run copyGraphic");
+    if !output.status.success() {
+        let stderr = str::from_utf8(&output.stderr).unwrap_or("Could not read stderr");
+        println!("{}", stderr);
+    }
+    let stdout = str::from_utf8(&output.stdout).unwrap();
+    println!("{}", stdout);
+    let file = fs::File::open("tests/out/copyGraphic.ntf").expect("Failed to open file");
+    let num_g_post = get_nums(&file);
+    assert_eq!(num_g_post, valid_nums);
 }
 
 #[test]
@@ -129,7 +191,7 @@ pub fn extract_jp2_index() {
 }
 
 #[test]
-pub fn get_numdes() {
+pub fn get_num_des() {
     let output = Command::new("java")
         .args([
             "--add-opens",

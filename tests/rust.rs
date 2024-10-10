@@ -25,13 +25,13 @@ fn copy_des() {
         .open("tests/out/copyDes.ntf")
         .expect("Failed to open file");
     println!("Opened files");
-    let num_des_pre = core::get_num_des(&output_file);
+    let num_des_pre = core::get_numdes(&output_file);
     println!("Number of Data Extensions: {}", num_des_pre);
-    let num_des_add = core::get_num_des(&input_file);
+    let num_des_add = core::get_numdes(&input_file);
     println!("Number of Data Extensions to add: {}", num_des_add);
     let valid_num_des = num_des_pre + num_des_add;
     core::copy_des_segments(&mut input_file, &mut output_file);
-    let num_des_post = core::get_num_des(&output_file);
+    let num_des_post = core::get_numdes(&output_file);
     assert_eq!(num_des_post, valid_num_des);
 }
 
